@@ -2,6 +2,8 @@
 
 By [Haoming Chen](http://haomingchen.org), Tao Zhang, Ming-Ting Sun, Ankur Saxena and Madhukar Budagavi.
 
+University of Washington and Samsung Research America
+
 ### Citation
 If you use this code, please cite:
 
