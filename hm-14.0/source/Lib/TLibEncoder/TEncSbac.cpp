@@ -61,6 +61,9 @@ TEncSbac::TEncSbac()
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+, m_cCUIntraPredFilterSCModel ( 1,             1,               NUM_INTRA_PRED_FILTER_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUIntraPredSCModel       ( 1,             1,               NUM_ADI_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUChromaPredSCModel      ( 1,             1,               NUM_CHROMA_PRED_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUDeltaQpSCModel         ( 1,             1,               NUM_DELTA_QP_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
@@ -111,6 +114,9 @@ Void TEncSbac::resetEntropy           ()
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  m_cCUIntraPredFilterSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_FILTER_MODE );
+#endif
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_MODE );
   m_cCUChromaPredSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CHROMA_PRED_MODE );
   m_cCUInterDirSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_INTER_DIR );
@@ -164,6 +170,9 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cCUMergeIdxExtSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_MERGE_IDX_EXT);
       curCost += m_cCUPartSizeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PART_SIZE );
       curCost += m_cCUPredModeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PRED_MODE );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+      curCost += m_cCUIntraPredFilterSCModel.calcCost ( curSliceType, qp, (UChar*)INIT_INTRA_PRED_MODE );
+#endif
       curCost += m_cCUIntraPredSCModel.calcCost       ( curSliceType, qp, (UChar*)INIT_INTRA_PRED_MODE );
       curCost += m_cCUChromaPredSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_CHROMA_PRED_MODE );
       curCost += m_cCUInterDirSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_INTER_DIR );
@@ -212,6 +221,9 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  m_cCUIntraPredFilterSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_FILTER_MODE );
+#endif
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_MODE );
   m_cCUChromaPredSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CHROMA_PRED_MODE );
   m_cCUInterDirSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_INTER_DIR );
@@ -607,6 +619,22 @@ Void TEncSbac::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
   DTRACE_CABAC_V( uiCtx )
   DTRACE_CABAC_T( "\n" )
 }
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+Void TEncSbac::codeIntraPredFilter( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple)
+{
+  UInt filter[4],j;
+  UInt partNum = 1;
+  UInt partOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth(absPartIdx) << 1 ) ) >> 2;
+  for (j=0;j<partNum;j++)
+  {
+    filter[j] = pcCU->getIntraPredFilter( absPartIdx+partOffset*j );
+
+    m_pcBinIf->encodeBin((filter[j] == 1)? 1 : 0, m_cCUIntraPredFilterSCModel.get( 0, 0, 0 ) );
+  }
+  return;
+}
+#endif
 
 Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple)
 {

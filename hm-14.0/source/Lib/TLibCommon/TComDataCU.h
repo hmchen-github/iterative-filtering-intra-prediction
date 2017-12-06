@@ -144,6 +144,9 @@ private:
   Char*         m_apiMVPIdx[2];       ///< array of motion vector predictor candidates
   Char*         m_apiMVPNum[2];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  UChar*        m_puhIntraPredFilter;      ///< arrary of filter on intra prediction residuals
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
@@ -341,6 +344,12 @@ public:
   Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  UChar*        getIntraPredFilter         ()                        { return m_puhIntraPredFilter;            }
+  UChar         getIntraPredFilter         (UInt uiIdx )             { return m_puhIntraPredFilter[uiIdx];     }
+  Void          setIntraPredFilter         (UInt uiIdx, UChar uh )   { m_puhIntraPredFilter[uiIdx] = uh;       }
+  Void          setIntraPredFilterSubParts (UInt uiIntraPredFilter, UInt uiAbsPartIdx, UInt uiDepth);
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
@@ -446,6 +455,10 @@ public:
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  UInt          getCtxIntraFilterFlag           ( UInt   uiAbsPartIdx                                 );
+#endif
   
   UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
   UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }

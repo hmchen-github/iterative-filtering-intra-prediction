@@ -24,3 +24,5 @@ Code for generating figures in the paper.
 
 #### hm-14.0
 Implementation in the HEVC reference software.
+
+Turn on/off ITERATIVE_FILTERING_INTRA_PREDICTION to switch the proposed method and HM-14.0.

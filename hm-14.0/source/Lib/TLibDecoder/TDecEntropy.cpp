@@ -36,6 +36,9 @@
 */
 
 #include "TDecEntropy.h"
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+#include "TLibCommon/TComPrediction.h"
+#endif
 
 //! \ingroup TLibDecoder
 //! \{
@@ -106,6 +109,13 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+      if (TComPrediction::useFilteredIntra( pcCU, uiAbsPartIdx ))
+          decodeIntraPredFilter( pcCU, uiAbsPartIdx, uiDepth );
+      else
+          pcCU->setIntraPredFilterSubParts( (UChar)INTRA_PREDICTION_NO_FILTER, uiAbsPartIdx, uiDepth );
+#endif
+
     decodeIntraDirModeChroma( pcCU, uiAbsPartIdx, uiDepth );
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index
@@ -131,6 +141,13 @@ Void TDecEntropy::decodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   
   m_pcEntropyDecoderIf->parseIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
 }
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+Void TDecEntropy::decodeIntraPredFilter  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  m_pcEntropyDecoderIf->parseIntraPredFilter( pcCU, uiAbsPartIdx, uiDepth );
+}
+#endif
 
 Void TDecEntropy::decodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {

@@ -1477,6 +1477,13 @@ Void TDecCavlc::parseIPCMInfo( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
   assert(0);
 }
 
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+Void TDecCavlc::parseIntraPredFilter  ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{ 
+  assert(0);
+}
+#endif
+
 Void TDecCavlc::parseIntraDirLumaAng  ( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 { 
   assert(0);

@@ -1142,6 +1142,13 @@ Void TEncCavlc::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+Void TEncCavlc::codeIntraPredFilter( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool isMultiple)
+{
+  assert(0);
+}
+#endif
+
 Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool isMultiple)
 {
   assert(0);

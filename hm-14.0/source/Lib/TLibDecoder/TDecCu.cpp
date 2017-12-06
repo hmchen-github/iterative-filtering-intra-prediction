@@ -467,7 +467,11 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
                                      bAboveAvail, bLeftAvail );
   
   //===== get prediction signal =====
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  m_pcPrediction->predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail, pcCU->getIntraPredFilter(0) );
+#else
   m_pcPrediction->predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );
+#endif
   
   if ( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth ) )
   {
@@ -577,7 +581,11 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
     {
       uiChromaPredMode = pcCU->getLumaIntraDir( 0 );
     }
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+    m_pcPrediction->predIntraChromaAng( pPatChroma, uiChromaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail, pcCU->getIntraPredFilter(0) );  
+#else
     m_pcPrediction->predIntraChromaAng( pPatChroma, uiChromaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );  
+#endif
   }
 
   if ( pcCU->getCbf( uiAbsPartIdx, eText, uiTrDepth ) )

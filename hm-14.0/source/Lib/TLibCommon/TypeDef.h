@@ -182,6 +182,13 @@
 #define CABAC_INIT_PRESENT_FLAG     1
 
 // ====================================================================================================================
+// Iterative Filtering Intra Prediction
+// Haoming Chen, eehmchen@uw.edu
+// University of Washington
+// ====================================================================================================================
+#define ITERATIVE_FILTERING_INTRA_PREDICTION                                                   1
+
+// ====================================================================================================================
 // Basic type redefinition
 // ====================================================================================================================
 
@@ -519,6 +526,15 @@ namespace Level
     LEVEL6_2 = 186,
   };
 }
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+enum IntraPredFilterTypes
+{
+    INTRA_PREDICTION_NO_FILTER = 0,
+    INTRA_PREDICTOR_SMOOTHING_FILTER,
+    NUM_INTRA_PREDICTION_FILTERS
+};
+#endif
 //! \}
 
 #endif

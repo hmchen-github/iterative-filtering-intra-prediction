@@ -38,6 +38,9 @@
 #include "TEncEntropy.h"
 #include "TLibCommon/TypeDef.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+#include "TLibCommon/TComPrediction.h"
+#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -383,6 +386,14 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
   }
 }
 
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+// Intra direction for Luma
+Void TEncEntropy::encodeIntraPredFilter  ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiplePU )
+{
+  m_pcEntropyCoderIf->codeIntraPredFilter( pcCU, absPartIdx , isMultiplePU);
+}
+#endif
+
 // Intra direction for Luma
 Void TEncEntropy::encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiplePU )
 {
@@ -409,6 +420,13 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx,true );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+      if ( TComPrediction::useFilteredIntra( pcCU, uiAbsPartIdx ) )
+          encodeIntraPredFilter( pcCU, uiAbsPartIdx, false );
+      else {
+          assert( pcCU->getIntraPredFilter( uiAbsPartIdx ) == INTRA_PREDICTION_NO_FILTER );
+      }
+#endif
     encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index

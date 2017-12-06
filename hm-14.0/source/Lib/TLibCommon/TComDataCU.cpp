@@ -111,6 +111,10 @@ TComDataCU::TComDataCU()
   m_bDecSubCu          = false;
   m_sliceStartCU        = 0;
   m_sliceSegmentStartCU = 0;
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  m_puhIntraPredFilter      = NULL;
+#endif
 }
 
 TComDataCU::~TComDataCU()
@@ -223,6 +227,10 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
   
   m_apcCUColocated[0]  = NULL;
   m_apcCUColocated[1]  = NULL;
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  m_puhIntraPredFilter = (UChar*)xMalloc(UChar, uiNumPartition);
+#endif
 }
 
 Void TComDataCU::destroy()
@@ -286,7 +294,9 @@ Void TComDataCU::destroy()
     
     m_acCUMvField[0].destroy();
     m_acCUMvField[1].destroy();
-    
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+    if (m_puhIntraPredFilter) { xFree(m_puhIntraPredFilter);      m_puhIntraPredFilter = NULL; }
+#endif
   }
   
   m_pcCUAboveLeft       = NULL;
@@ -394,6 +404,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     m_puhCbf[1][ui]=pcFrom->m_puhCbf[1][ui];
     m_puhCbf[2][ui]=pcFrom->m_puhCbf[2][ui];
     m_pbIPCMFlag[ui] = pcFrom->m_pbIPCMFlag[ui];
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+    m_puhIntraPredFilter[ui] = pcFrom->m_puhIntraPredFilter[ui];
+#endif
   }
   
   Int firstElement = max<Int>( partStartIdx, 0 );
@@ -427,6 +440,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_puhCbf[1]         + firstElement, 0,                        numElements * sizeof( *m_puhCbf[1] ) );
     memset( m_puhCbf[2]         + firstElement, 0,                        numElements * sizeof( *m_puhCbf[2] ) );
     memset( m_pbIPCMFlag        + firstElement, false,                    numElements * sizeof( *m_pbIPCMFlag ) );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+    memset( m_puhIntraPredFilter     + firstElement, 0,                        numElements * sizeof( *m_puhIntraPredFilter ) );
+#endif
   }
   
   UInt uiTmp = g_uiMaxCUWidth*g_uiMaxCUHeight;
@@ -562,6 +578,9 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp, Bool bTransquantBypass )
       m_puhCbf[0][ui] = 0;
       m_puhCbf[1][ui] = 0;
       m_puhCbf[2][ui] = 0;
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+      m_puhIntraPredFilter[ui] = 0;
+#endif
     }
   }
 
@@ -636,6 +655,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   memset( m_puhWidth,          uhWidth,  iSizeInUchar );
   memset( m_puhHeight,         uhHeight, iSizeInUchar );
   memset( m_pbIPCMFlag,        0, iSizeInBool  );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  memset( m_puhIntraPredFilter,     0, iSizeInUchar );
+#endif
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
     m_skipFlag[ui]   = false;
@@ -673,7 +695,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_puhCbf[0][ui]=pcCU->m_puhCbf[0][uiPartOffset+ui];
       m_puhCbf[1][ui]=pcCU->m_puhCbf[1][uiPartOffset+ui];
       m_puhCbf[2][ui]=pcCU->m_puhCbf[2][uiPartOffset+ui];
-
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+      m_puhIntraPredFilter[ui] = pcCU->m_puhIntraPredFilter[uiPartOffset + ui];
+#endif
     }
   }
   UInt uiTmp = uhWidth*uhHeight;
@@ -800,6 +824,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_apiMVPNum[1]=pcCU->getMVPNum(REF_PIC_LIST_1)  + uiPart;
   
   m_pbIPCMFlag         = pcCU->getIPCMFlag()        + uiPart;
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  m_puhIntraPredFilter      = pcCU->getIntraPredFilter()        + uiPart;
+#endif
 
   m_pcCUAboveLeft      = pcCU->getCUAboveLeft();
   m_pcCUAboveRight     = pcCU->getCUAboveRight();
@@ -925,6 +952,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_apiMVPNum[1] + uiOffset, pcCU->getMVPNum(REF_PIC_LIST_1), iSizeInUchar );
   
   memcpy( m_pbIPCMFlag + uiOffset, pcCU->getIPCMFlag(), iSizeInBool );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  memcpy( m_puhIntraPredFilter + uiOffset, pcCU->getIntraPredFilter(), iSizeInUchar );
+#endif
 
   m_pcCUAboveLeft      = pcCU->getCUAboveLeft();
   m_pcCUAboveRight     = pcCU->getCUAboveRight();
@@ -1008,6 +1038,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   m_acCUMvField[1].copyTo( rpcCU->getCUMvField( REF_PIC_LIST_1 ), m_uiAbsIdxInLCU );
   
   memcpy( rpcCU->getIPCMFlag() + m_uiAbsIdxInLCU, m_pbIPCMFlag,         iSizeInBool  );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  memcpy( rpcCU->getIntraPredFilter() + m_uiAbsIdxInLCU, m_puhIntraPredFilter,         iSizeInUchar  );
+#endif
 
   UInt uiTmp  = (g_uiMaxCUWidth*g_uiMaxCUHeight)>>(uhDepth<<1);
   UInt uiTmp2 = m_uiAbsIdxInLCU*m_pcPic->getMinCUWidth()*m_pcPic->getMinCUHeight();
@@ -1078,6 +1111,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   m_acCUMvField[1].copyTo( rpcCU->getCUMvField( REF_PIC_LIST_1 ), m_uiAbsIdxInLCU, uiPartStart, uiQNumPart );
   
   memcpy( rpcCU->getIPCMFlag() + uiPartOffset, m_pbIPCMFlag,         iSizeInBool  );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  memcpy( rpcCU->getIntraPredFilter() + uiPartOffset, m_puhIntraPredFilter,    iSizeInUchar );
+#endif
 
   UInt uiTmp  = (g_uiMaxCUWidth*g_uiMaxCUHeight)>>((uhDepth+uiPartDepth)<<1);
   UInt uiTmp2 = uiPartOffset*m_pcPic->getMinCUWidth()*m_pcPic->getMinCUHeight();
@@ -1746,6 +1782,26 @@ UInt TComDataCU::getCtxInterDir( UInt uiAbsPartIdx )
 {
   return getDepth( uiAbsPartIdx );
 }
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+UInt TComDataCU::getCtxIntraFilterFlag( UInt uiAbsPartIdx )
+{
+  TComDataCU* pcTempCU;
+  UInt        uiTempPartIdx;
+  UInt        uiCtx = 0;
+  
+  // Get BCBP of left PU
+  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+
+  uiCtx    = ( pcTempCU ) ? ((pcTempCU->getIntraPredFilter( uiTempPartIdx ) == 1)? 1 : 0) : 0;
+  
+  // Get BCBP of above PU
+  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  uiCtx   += ( pcTempCU ) ? ((pcTempCU->getIntraPredFilter( uiTempPartIdx ) == 1)? 1 : 0) : 0;
+  
+  return uiCtx;
+}
+#endif
 
 Void TComDataCU::setCbfSubParts( UInt uiCbfY, UInt uiCbfU, UInt uiCbfV, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -2999,6 +3055,21 @@ Void TComDataCU::setIPCMFlagSubParts  (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt u
 
   memset(m_pbIPCMFlag + uiAbsPartIdx, bIpcmFlag, sizeof(Bool)*uiCurrPartNumb );
 }
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+/** Set a filter type for all sub-partitions of a partition.
+* \param puhIntraPredFilter flag
+* \param uiAbsPartIdx patition index
+* \param uiDepth CU depth
+* \returns Void
+*/
+Void TComDataCU::setIntraPredFilterSubParts(UInt uiIntraPredFilter, UInt uiAbsPartIdx, UInt uiDepth)
+{
+    UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
+
+    memset(m_puhIntraPredFilter + uiAbsPartIdx, uiIntraPredFilter, sizeof(Bool)*uiCurrPartNumb);
+}
+#endif
 
 /** Test whether the current block is skipped
  * \param uiPartIdx Block index

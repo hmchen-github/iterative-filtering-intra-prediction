@@ -296,6 +296,9 @@ const UChar g_aucIntraModeNumFast[MAX_CU_DEPTH] =
 
 const UChar g_aucConvertTxtTypeToIdx[4] = { 0, 1, 1, 2 };
 
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+const UInt  g_uiFilteringIterNum[ MAX_CU_DEPTH ] = { 3, 5, 10, 25, 0, 0 };
+#endif
 
 // ====================================================================================================================
 // Bit-depth

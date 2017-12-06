@@ -128,6 +128,9 @@ extern       UInt   g_sigLastScanCG32x32[ 64 ];
 // ====================================================================================================================
 
 extern const UChar  g_aucIntraModeNumFast[ MAX_CU_DEPTH ];
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+extern const UInt   g_uiFilteringIterNum[ MAX_CU_DEPTH ];
+#endif
 
 // ====================================================================================================================
 // Bit-depth

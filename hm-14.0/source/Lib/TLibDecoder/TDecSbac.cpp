@@ -55,6 +55,9 @@ TDecSbac::TDecSbac()
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+, m_cCUIntraPredFilterSCModel ( 1,             1,               NUM_INTRA_PRED_FILTER_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUIntraPredSCModel       ( 1,             1,               NUM_ADI_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUChromaPredSCModel      ( 1,             1,               NUM_CHROMA_PRED_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUDeltaQpSCModel         ( 1,             1,               NUM_DELTA_QP_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
@@ -113,6 +116,9 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCUMergeIdxExtSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
   m_cCUPartSizeSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_PART_SIZE );
   m_cCUPredModeSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_PRED_MODE );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  m_cCUIntraPredFilterSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_INTRA_PRED_FILTER_MODE );
+#endif
   m_cCUIntraPredSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_INTRA_PRED_MODE );
   m_cCUChromaPredSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_CHROMA_PRED_MODE );
   m_cCUInterDirSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_INTER_DIR );
@@ -158,6 +164,9 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT );
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  m_cCUIntraPredFilterSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_FILTER_MODE );
+#endif
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_MODE );
   m_cCUChromaPredSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CHROMA_PRED_MODE );
   m_cCUInterDirSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_INTER_DIR );
@@ -599,6 +608,23 @@ Void TDecSbac::parsePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   iPredMode += uiSymbol;
   pcCU->setPredModeSubParts( (PredMode)iPredMode, uiAbsPartIdx, uiDepth );
 }
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+Void TDecSbac::parseIntraPredFilter  ( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
+{
+  UInt partNum = 1;
+  UInt partOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth(absPartIdx) << 1 ) ) >> 2;
+  UInt filter[4],symbol;
+  Int j;
+
+  for (j=0;j<partNum;j++)
+  {
+    m_pcTDecBinIf->decodeBin( symbol, m_cCUIntraPredFilterSCModel.get( 0, 0, 0) );
+    filter[j] = symbol;
+    pcCU->setIntraPredFilterSubParts( (filter[j] == 1)? 1 : 0, absPartIdx+partOffset*j, depth );
+  }
+}
+#endif
 
 Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
 {

@@ -94,7 +94,7 @@ public:
     
     printf( "\tTotal Frames |  "   "Bitrate    "  "Y-PSNR    "  "U-PSNR    "  "V-PSNR \n" );
     //printf( "\t------------ "  " ----------"   " -------- "  " -------- "  " --------\n" );
-    printf( "\t %8d    %c"          "%12.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf\n",
+    printf( "\t %8d    %c"          "%15.4lf  "    "%8.4lf  "   "%8.4lf  "    "%8.4lf\n",
            getNumPic(), cDelim,
            getBits() * dScale,
            getPsnrY() / (Double)getNumPic(),

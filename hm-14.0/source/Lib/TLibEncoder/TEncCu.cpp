@@ -626,12 +626,26 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
           rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+            if ( TComPrediction::useFilteredIntra( rpcTempCU, 0 ) ) {
+              xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N, 1 );
+
+          rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+          }
+#endif
           if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
           {
             if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
             {
               xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN   );
               rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+                if ( TComPrediction::useFilteredIntra( rpcTempCU, 0 ) ) {
+                  xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN, 1 );
+
+              rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+              }
+#endif
             }
           }
         }
@@ -1341,7 +1355,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
 }
 
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize, UChar uhFilter )
+#else
 Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize )
+#endif
 {
   UInt uiDepth = rpcTempCU->getDepth( 0 );
   
@@ -1349,6 +1367,10 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   rpcTempCU->setPartSizeSubParts( eSize, 0, uiDepth );
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  rpcTempCU->setIntraPredFilter( 0, uhFilter );
+  rpcTempCU->setIntraPredFilterSubParts( uhFilter, 0, uiDepth );
+#endif
   
   Bool bSeparateLumaChroma = true; // choose estimation mode
   UInt uiPreCalcDistC      = 0;

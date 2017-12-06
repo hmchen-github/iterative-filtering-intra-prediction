@@ -577,7 +577,11 @@ Int* TComPattern::getAdiCrBuf(Int iCuWidth,Int iCuHeight, Int* piAdiBuf)
  *
  * The prediction mode index is used to determine whether a smoothed reference sample buffer is returned.
  */
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+Int* TComPattern::getPredictorPtr( UInt uiDirMode, UInt log2BlkSize, Int* piAdiBuf,  UChar uiFilter )
+#else
 Int* TComPattern::getPredictorPtr( UInt uiDirMode, UInt log2BlkSize, Int* piAdiBuf )
+#endif
 {
   Int* piSrc;
   assert(log2BlkSize >= 2 && log2BlkSize < 7);
@@ -594,6 +598,11 @@ Int* TComPattern::getPredictorPtr( UInt uiDirMode, UInt log2BlkSize, Int* piAdiB
   Int height = 1 << log2BlkSize;
   
   piSrc = getAdiOrgBuf( width, height, piAdiBuf );
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  if ( uiFilter == 1 )
+    return piSrc;
+#endif
 
   if ( ucFiltIdx )
   {

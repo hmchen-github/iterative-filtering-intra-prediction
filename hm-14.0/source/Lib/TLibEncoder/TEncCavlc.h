@@ -114,6 +114,9 @@ public:
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeQtCbfZero     ( TComDataCU* pcCU, TextType eType, UInt uiTrDepth );
   Void codeQtRootCbfZero ( TComDataCU* pcCU );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  Void codeIntraPredFilter( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
+#endif
   Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple);
   Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx );

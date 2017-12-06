@@ -95,6 +95,9 @@ public:
   virtual Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeQtCbfZero     ( TComDataCU* pcCU, TextType eType, UInt uiTrDepth ) = 0;
   virtual Void codeQtRootCbfZero ( TComDataCU* pcCU ) = 0;
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  virtual Void codeIntraPredFilter( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool isMultiplePU ) = 0;
+#endif
   virtual Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool isMultiplePU ) = 0;
   
   virtual Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
@@ -160,6 +163,9 @@ public:
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+  Void encodeIntraPredFilter  ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiplePU = false );
+#endif
   Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiplePU = false );
   
   Void encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );

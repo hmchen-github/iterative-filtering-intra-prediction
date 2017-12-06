@@ -56,7 +56,9 @@
 
 #define NUM_PART_SIZE_CTX             4       ///< number of context models for partition size
 #define NUM_PRED_MODE_CTX             1       ///< number of context models for prediction mode
-
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+#define NUM_INTRA_PRED_FILTER_CTX     3       ///< number of context models for intra prediction filters
+#endif
 #define NUM_ADI_CTX                   1       ///< number of context models for intra prediction
 
 #define NUM_CHROMA_PRED_CTX           2       ///< number of context models for intra prediction (chroma)
@@ -154,6 +156,16 @@ INIT_PRED_MODE[3][NUM_PRED_MODE_CTX] =
   { 149, }, 
   { CNU, }, 
 };
+
+#if ITERATIVE_FILTERING_INTRA_PREDICTION
+static const UChar 
+INIT_INTRA_PRED_FILTER_MODE[3][NUM_INTRA_PRED_FILTER_CTX] = 
+{
+  { 197,  185,  201, }, 
+  { 197,  185,  201, }, 
+  { CNU,  CNU,  CNU, }, 
+};
+#endif
 
 static const UChar 
 INIT_INTRA_PRED_MODE[3][NUM_ADI_CTX] = 
